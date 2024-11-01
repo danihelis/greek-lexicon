@@ -1,0 +1,6 @@
+*.pyc
+lexica
+
+*.txt
+*.json
+*.gz

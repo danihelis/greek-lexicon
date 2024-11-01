@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>Test</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    Greek dictionary
+    <input type="text" name="search" id="id_search">
+    <ul id="id_list"></ul>
+  </body>
+  <script>
+    var trie = null;
+
+    const listWords = (word) => {
+      if (!trie) return;
+      if (!word) word = '';
+      let node = trie.index;
+      let pos;
+      for (pos = 0; pos < word.length; pos++) {
+        let symbol = word[pos];
+        if (node[2] && symbol in node[2]) node = node[2][symbol];
+        else break;
+      }
+      let list = $("#id_list");
+      list.html("");
+      let start = node[0];
+      let end = node[1];
+      for (let i = start; i <= end &&  i - start < 25; i++) {
+        list.append($(`<li>${ trie.data[i] }</li>`));
+      }
+    };
+
+    fetch("index.json.gz")
+    .then(response => response.blob())
+    .then(blob => new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))))
+    .then(response => response.blob())
+    .then(blob => blob.text())
+    .then(text => {
+      trie = JSON.parse(text);
+      console.log(trie);
+      listWords();
+    });
+
+    $(() => {
+      $("#id_search").on("input", function () {
+        listWords($(this).val());
+      });
+    });
+  </script>
+</html>
