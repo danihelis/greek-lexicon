@@ -6,7 +6,7 @@ import re
 import sys
 from xml import sax
 
-from beta import convert
+from betacode import betacode
 
 class Extractor(sax.handler.ContentHandler):
 
@@ -42,7 +42,7 @@ class Extractor(sax.handler.ContentHandler):
             content = '~'
         content = re.sub(r'\s+', ' ', ''.join(element['content']).strip())
         if element['greek'] and self.stack and not self.top['greek']:
-            content = '$%s$' % (content and convert(content))
+            content = '$%s$' % (content and betacode.convert(content))
         if name == 'biblScope':
             content = 'ß{}ß'.format(content)
         elif name == 'orth':
@@ -81,7 +81,7 @@ class Extractor(sax.handler.ContentHandler):
     def dump(self, filename, mode='w'):
         with open(filename, mode) as stream:
             for key in self.result.keys():
-                print(key, convert(key), file=stream)
+                print(key, betacode.convert(key), file=stream)
                 print('\t' + self.result[key], file=stream)
 
 
