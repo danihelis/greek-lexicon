@@ -10,18 +10,18 @@ import sys
 
 class Lexicon:
     mapping = 'abgdevzhqiklmncoprstufxyw'
-    superscript = '⁰¹²³⁴⁵⁶⁷⁸⁹'
 
     class Index:
+        superscript = '⁰¹²³⁴⁵⁶⁷⁸⁹'
 
         def __init__(self, lexicon):
             self.lexicon = lexicon
             self.root = [0, 0, {}]
             lexicon.entries.sort(key=lambda e: e['order'])
             for index, entry in enumerate(lexicon.entries):
-                previous = lexicon.entries[index] if index else None
+                previous = lexicon.entries[index - 1] if index else None
                 entry['script'] = 0
-                if previous and previous['key'] != entry['key']:
+                if previous and previous['key'] == entry['key']:
                     if previous['script'] == 0:
                         previous['script'] = 1
                         previous['word'] += self.into_superscript(1)
@@ -39,7 +39,7 @@ class Lexicon:
             while number > 0:
                 script = self.superscript[number % 10] + script
                 number = number // 10
-            return number
+            return script
 
         def add_key(self, key, index):
             node = self.root
@@ -69,14 +69,14 @@ class Lexicon:
             if symbol in self.mapping:
                 order += chr(0x40 + self.mapping.index(symbol))
                 key += symbol
-            else:
-                self.discarded.add(symbol)
-                if symbol in word and symbol not in '0123456789':
-                    print(line)
-                if symbol == 'j':
-                    print(line)
+            # else:
+            #     self.discarded.add(symbol)
+            #     if symbol in word and symbol not in '0123456789':
+            #         print(line)
+            #     if symbol == 'j':
+            #         print(line)
         order += chr(0x20 + number) if number else ''
-        word = re.sub(r'\d\+', '', word).replace('<', '(').replace('>', ')')
+        word = re.sub(r'\d+', '', word).replace('<', '[').replace('>', ']')
         entry = {'key': key, 'order': order, 'word': word, 'entry': []}
         self.entries.append(entry)
         return entry
@@ -93,7 +93,7 @@ class Lexicon:
                 else:
                     entry = self.create_entry(line)
         print('Found %d entries' % len(self.entries))
-        print('Charactes discarted from keys:', self.discarded)
+        # print('Charactes discarted from keys:', self.discarded)
         self.index = self.Index(self)
 
     def into_json(self):
