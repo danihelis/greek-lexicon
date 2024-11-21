@@ -32,12 +32,21 @@
         display: flex;
         gap: 0.5rem;
         align-items: stretch;
+        margin: 2rem 0;
       }
       #input {
         flex-grow: 1;
       }
       button {
         white-space: nowrap;
+      }
+      #content {
+        .definition {
+          font-weight: bold;
+        }
+        .sense, .biblio {
+          font-style: italic;
+        }
       }
     </style>
     <div class="container">
@@ -50,27 +59,27 @@
             <button id="search" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-left"></i></button>
             <button id="search" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-right"></i></button>
           </div>
-          <div class="content"></div>
+          <div id="content"></div>
         </div>
       </div>
     </div>
     <script>
-      var trie = null;
       var lexicon = null;
       var results = [];
 
       const listWords = (word, pageIndex, pageSize) => {
-        if (!trie) return {"results": []};
+        if (!lexicon) return {"results": []};
         if (!word) word = '';
-        let node = trie.index;
+        let node = lexicon.index;
         let pos;
         for (pos = 0; pos < word.length; pos++) {
           let symbol = word[pos];
           if (node[2] && symbol in node[2]) node = node[2][symbol];
           else break;
         }
-        let list = $("#id_list");
-        // list.html("");
+        if (node[0] == node[1] && word != lexicon.data[node[0]].key) {
+          return {"results": []};
+        }
         results = [];
         let start = node[0];
         let end = node[1];
@@ -78,28 +87,29 @@
         start += (pageIndex || 0) * pageSize;
         let i;
         for (i = start; i <= end &&  i - start < pageSize; i++) {
-          results.push({"id": i, "text": trie.data[i]});
-          // list.append($(`<li>${ trie.data[i] }</li>`));
+          results.push({"id": i, "text": lexicon.data[i].word});
         }
         let r = {"results": results, "pagination": {"more": i < end}};
         return r;
       };
 
       const showEntry = (id) => {
-        console.log('selected', id);
+        let $content = $("<div></div>");
+        if (id != null) {
+          for (const line of lexicon.data[id].entry) {
+            let $entry = $("<p></p>");
+            let formatted = line.replace(/%([^%]*)%/g, "<span class='definition'>$1</span>");
+            formatted = formatted.replace(/@([^@]*)@/g, "<span class='sense'>$1</span>");
+            formatted = formatted.replace(/#([^#]*)#/g, "<span class='biblio'>$1</span>");
+            $entry.html(formatted);
+            $content.append($entry);
+          }
+        }
+        $("#content").empty();
+        $("#content").append($content);
       };
 
-      fetch("index.json.gz")
-      .then(response => response.blob())
-      .then(blob => new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))))
-      .then(response => response.blob())
-      .then(blob => blob.text())
-      .then(text => {
-        trie = JSON.parse(text);
-        console.log("Loaded", trie.data.length, "keys");
-      });
-
-      fetch("data.json.gz")
+      fetch("lexicon.json.gz")
       .then(response => response.blob())
       .then(blob => new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))))
       .then(response => response.blob())
@@ -122,8 +132,8 @@
           Utils.Extend(CustomData, ArrayData);
           CustomData.prototype.current = function (callback) {
             let index = this.$element.val();
-            if (trie && index in trie.data) {
-              callback([{"id": index, "text": trie.data[index]}]);
+            if (lexicon && index != null) {
+              callback([{"id": index, "text": lexicon.data[index].word}]);
             } else callback([]);
           };
           CustomData.prototype.query = function (params, callback) {
