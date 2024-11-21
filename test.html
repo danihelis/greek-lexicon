@@ -17,22 +17,32 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
     <style>
+      @import url("https://fonts.googleapis.com/css?family=Literata");
+      @import url("https://fonts.googleapis.com/css?family=Noto+Serif");
       @media (min-width: 992px) {
         .container {
           max-width: 960px;
         }
       }
+      body {
+        font-family: "Literata", "Noto Serif";
+        font-size: 1.2em;
+      }
       h2 {
         text-align: center;
-        background: #052c65;
+        background: #374c4a;
         color: white;
         padding: 2rem 0;
+      }
+      .custom-dropdown {
+        font-size: 1.2em;
       }
       .control {
         display: flex;
         gap: 0.5rem;
         align-items: stretch;
         margin: 2rem 0;
+        font-size: 1.2em;
       }
       #input {
         flex-grow: 1;
@@ -42,9 +52,14 @@
       }
       #content {
         .definition {
-          font-weight: bold;
+          font-weight: 1000;
+          /*color: #374c4a;*/
         }
-        .sense, .biblio {
+        .sense {
+          font-style: italic;
+          color: #5a7b5e;
+        }
+        .biblio {
           font-style: italic;
         }
       }
@@ -77,9 +92,7 @@
           if (node[2] && symbol in node[2]) node = node[2][symbol];
           else break;
         }
-        if (node[0] == node[1] && word != lexicon.data[node[0]].key) {
-          return {"results": []};
-        }
+        if (!lexicon.data[node[0]].key.startsWith(word)) return {"results": []};
         results = [];
         let start = node[0];
         let end = node[1];
@@ -153,23 +166,6 @@
             showEntry($(this).val());
           });
         });
-
-        /*
-        console.log("loaded");
-        $("#search").select2({
-          "width": "100%",
-          "placeholder": "Type a word to start searching...",
-          "query": (options) => {
-            options.callback(listWords(options.term || ""));
-          },
-          "initSelection": (elem, callback) => {
-            console.log('initSelection', elem);
-          },
-        });
-        $("#id_search").on("input", function () {
-          listWords($(this).val());
-        });
-        */
       });
     </script>
   </body>
