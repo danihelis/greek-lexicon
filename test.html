@@ -86,13 +86,18 @@
         .definition {
           font-weight: bolder;
           color: #374c4a;
+          font-size: 110%;
         }
         .sense {
           font-style: italic;
           color: #5a7b5e;
+          font-weight: 600;
+        }
+        .title {
+          font-style: italic;
         }
         .biblio {
-          font-style: italic;
+          color: #777;
         }
         .loading {
           margin: 20vh 0;
@@ -194,12 +199,12 @@
         let start = node[0];
         let end = node[1];
         pageSize = pageSize || 5;
-        start += (pageIndex || 0) * pageSize;
+        start += ((pageIndex || 1) - 1) * pageSize;
         let i;
         for (i = start; i <= end &&  i - start < pageSize; i++) {
           results.push({"id": i, "text": lexicon.data[i].word});
         }
-        let r = {"results": results, "pagination": {"more": i < end}};
+        let r = {"results": results, "pagination": {"more": i <= end}};
         return r;
       };
 
@@ -210,7 +215,8 @@
             let $entry = $("<p></p>");
             let formatted = line.replace(/%([^%]*)%/g, "<span class='definition'>$1</span>");
             formatted = formatted.replace(/@([^@]*)@/g, "<span class='sense'>$1</span>");
-            formatted = formatted.replace(/#([^#]*)#/g, "<span class='biblio'>$1</span>");
+            formatted = formatted.replace(/&([^&]*)&/g, "<span class='biblio'>$1</span>");
+            formatted = formatted.replace(/#([^#]*)#/g, "<span class='title'>$1</span>");
             $entry.html(formatted);
             $content.append($entry);
           }

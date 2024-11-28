@@ -76,7 +76,7 @@ class Betacode:
             self.add(f'r{breath}', symbol)
             self.add(f'*{breath}r', symbol.upper())
             self.add(f'*r{breath}', symbol.upper())
-        self.sigma = regex.compile(r'σ(?=[^-[\p{L}><]|]|$)|σ(?=\P{L}(\P{L}|$))')
+        self.sigma = regex.compile(r'(?<!^|\s)(σ(?=[^-[\p{L}><]|]|$)|σ(?=\P{L}(\P{L}|$)))')
 
     def permutation(self, *args):
         if len(args) <= 1:

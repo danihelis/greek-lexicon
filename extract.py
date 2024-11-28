@@ -43,14 +43,14 @@ class Extractor(sax.handler.ContentHandler):
         content = re.sub(r'\s+', ' ', ''.join(element['content']).strip())
         if element['greek'] and self.stack and not self.top['greek']:
             content = '$%s$' % (content and betacode.convert(content))
-        if name == 'biblScope':
-            content = 'ß{}ß'.format(content)
+        if name == 'bibl':
+            content = f'&{ content }&'
         elif name == 'orth':
-            content = '%{}%'.format(content)
+            content = f'%{ content }%'
         elif name == 'tr':
-            content = '@%s@' % content
+            content = f'@{ content }@'
         elif name == 'title':
-            content = '#%s#' % content
+            content = f'#{ content }#'
         elif name == 'sense' and element['n'] != 'A':
             if content.startswith('. '):
                 content = content[1:]
@@ -62,14 +62,14 @@ class Extractor(sax.handler.ContentHandler):
             # indent senses
             content = re.sub(r'\s*{(\w+)}', r'\n\t\1.', content)
             # clean punctuation to remove biblScope
-            content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([.])', r'.\1', content)
-            content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([,;:)])', r'.\1\2', content)
-            content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß(\s*[(]?)', r'.\1\2', content)
-            content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
-            content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
-            content = re.sub(r'([#$])\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
-            content = re.sub(r'([#$])\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
-            content = re.sub(r'ß', r'', content)
+            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([.])', r'.\1', content)
+            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([,;:)])', r'.\1\2', content)
+            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß(\s*[(]?)', r'.\1\2', content)
+            # content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
+            # content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
+            # content = re.sub(r'([#$])\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
+            # content = re.sub(r'([#$])\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
+            # content = re.sub(r'ß', r'', content)
             # fix punctuation
             content = re.sub(r'([(])\s*[,.:]\s*', r'\1', content)
             # content = re.sub(r'\s*—\s*', r' ——  ', content)
