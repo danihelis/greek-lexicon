@@ -266,7 +266,7 @@
         $("#content").append($content);
       };
 
-      fetch($("body").data("lexicon"))// "lexicon.json.gz")
+      fetch($("body").data("lexicon"))
       .then(response => response.blob())
       .then(blob => new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))))
       .then(response => response.blob())
