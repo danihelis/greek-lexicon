@@ -3,9 +3,11 @@
 https://danihelis.github.io/greek-lexicon/
 
 This is a simple web interface to Perseus's LSJ Greek Lexicon. The source XML
-(see license use below) is pre-processed to generate a reduced text version.
-This text version is compressed and equipped with a simple trie to work as a
-fast index.
+(see license below) is processed to remove (almost) all mark-up text
+and compress it into a gzipped json. A
+[trie](https://en.wikipedia.org/wiki/Trie) is used to improve index search. A
+custom betacode decoder is used, based on James Tauber's
+[implementation](https://jtauber.com/blog/2005/02/10/updated_python_trie_implementation/).
 
 ## License
 
