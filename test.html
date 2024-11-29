@@ -99,6 +99,18 @@
         .biblio {
           color: #777;
         }
+        .indent-1 {
+          padding-left: 1rem;
+        }
+        .indent-2 {
+          padding-left: 2rem;
+        }
+        .indent-3 {
+          padding-left: 3rem;
+        }
+        .indent-4 {
+          padding-left: 4rem;
+        }
         .loading {
           margin: 20vh 0;
           text-align: center;
@@ -208,12 +220,41 @@
         return r;
       };
 
+      const fixIndentation = (indent, start, end, pad) => {
+        if (start >= end) return;
+        let level = 100;
+        for (let i = start; i < end; i++) {
+          level = Math.min(indent[i].level, level);
+          indent[i].space += pad || 0;
+        }
+        let last = start;
+        for (let i = start; i < end; i++) {
+          if (indent[i].level == level) {
+            fixIndentation(indent, last, i, 1);
+            last = i + 1;
+          }
+        }
+        fixIndentation(indent, last, end, 1);
+      }
+
       const showEntry = (id) => {
         let $content = $("<div></div>");
         if (id != null) {
-          for (const line of lexicon.data[id].entry) {
+          let entries = lexicon.data[id].entry;
+          let indent = {};
+          for (let i = 1; i < entries.length; i++) {
+            let prefix = entries[i].substr(0, entries[i].indexOf('.'));
+            let level = 1; // I, II, III, ...
+            if (/^[A-Z]$/.test(prefix) && (prefix != 'I' || i > 1)) level = 0;
+            else if (/^\d+$/.test(prefix)) level = 2;
+            else if (/^[a-z]$/.test(prefix)) level = 3;
+            indent[i] = {'level': level, 'space': 0};
+          }
+          fixIndentation(indent, 1, entries.length);
+          for (let i = 0; i < entries.length; i++) {
             let $entry = $("<p></p>");
-            let formatted = line.replace(/%([^%]*)%/g, "<span class='definition'>$1</span>");
+            if (i > 0 && indent[i].space) $entry.addClass(`indent-${ indent[i].space }`);
+            let formatted = entries[i].replace(/%([^%]*)%/g, "<span class='definition'>$1</span>");
             formatted = formatted.replace(/@([^@]*)@/g, "<span class='sense'>$1</span>");
             formatted = formatted.replace(/&([^&]*)&/g, "<span class='biblio'>$1</span>");
             formatted = formatted.replace(/#([^#]*)#/g, "<span class='title'>$1</span>");
