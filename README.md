@@ -1,5 +1,7 @@
 # greek-lexicon
 
+https://danihelis.github.io/greek-lexicon/
+
 This is a simple web interface to Perseus's LSJ Greek Lexicon. The source XML
 (see license use below) is pre-processed to generate a reduced text version.
 This text version is compressed and equipped with a simple trie to work as a
