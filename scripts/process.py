@@ -14,22 +14,11 @@ class Lexicon:
     mapping = 'abgdevzhqiklmncoprstufxyw'
 
     class Index:
-        superscript = '⁰¹²³⁴⁵⁶⁷⁸⁹'
-
         def __init__(self, lexicon):
             self.lexicon = lexicon
             self.root = [0, 0, {}]
-            lexicon.entries.sort(key=lambda e: e['order'])
+            # lexicon.entries.sort(key=lambda e: e['order'])
             total = len(lexicon.entries)
-            for index, entry in enumerate(lexicon.entries):
-                previous = lexicon.entries[index - 1] if index else None
-                entry['script'] = 0
-                if previous and previous['key'] == entry['key']:
-                    if previous['script'] == 0:
-                        previous['script'] = 1
-                        previous['word'] += self.into_superscript(1)
-                    entry['script'] = previous['script'] + 1
-                    entry['word'] += self.into_superscript(entry['script'])
             for index, entry in enumerate(lexicon.entries):
                 self.add_key(entry['key'], index)
                 if index % 100 == 0:
@@ -38,7 +27,6 @@ class Lexicon:
             self.prune(self.root)
             for entry in lexicon.entries:
                 del entry['order']
-                del entry['script']
 
         def into_superscript(self, number):
             script = ''
@@ -52,6 +40,7 @@ class Lexicon:
             for symbol in key:
                 node[1] = index
                 node = node[-1].setdefault(symbol, [index, index, {}])
+            node[1] = index
 
         def prune(self, node):
             if node[0] == node[1]:
@@ -66,24 +55,13 @@ class Lexicon:
             self.create(filename)
 
     def create_entry(self, line):
-        parts = line.split()
-        word = ' '.join(parts[1:])
-        key = ''
+        key, word = line.split('|')
         order = ''
-        number = 0
-        for symbol in parts[0]:
+        for symbol in key:
             if symbol in self.mapping:
                 order += chr(0x40 + self.mapping.index(symbol))
-                key += symbol
-            # else:
-            #     self.discarded.add(symbol)
-            #     if symbol in word and symbol not in '0123456789':
-            #         print(line)
-            #     if symbol == 'j':
-            #         print(line)
-        order += chr(0x20 + number) if number else ''
-        word = re.sub(r'\d+', '', word).replace('<', '[').replace('>', ']')
-        entry = {'key': key, 'order': order, 'word': word, 'entry': []}
+        entry = {'key': key.strip(), 'order': order, 'word': word.strip(),
+                 'entry': []}
         self.entries.append(entry)
         return entry
 

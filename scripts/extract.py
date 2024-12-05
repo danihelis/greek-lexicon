@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 import os
-import re
+import regex as re
 import sys
 from xml import sax
 
@@ -16,7 +16,7 @@ class Extractor(sax.handler.ContentHandler):
     def __init__(self):
         self.key = None
         self.stack = []
-        self.result = OrderedDict()
+        self.results = []
 
     @property
     def top(self):
@@ -24,11 +24,12 @@ class Extractor(sax.handler.ContentHandler):
 
     def parse(self, filename, count=0):
         self.count = count
+        self.accepting = False
         sax.parse(filename, self)
-        return self.result
+        return self.results
 
     def characters(self, data):
-        if self.stack and self.key:
+        if self.stack and self.accepting:
             self.top['content'].append(data)
 
     def startElement(self, name, attrs):
@@ -36,16 +37,20 @@ class Extractor(sax.handler.ContentHandler):
                 'name': name, 'content': [], 'n': attrs.get('n', None),
                 'greek': attrs.get('lang', None) == 'greek'})
         if name == 'entryFree':
-            self.key = attrs.get('key', None)
+            self.key = None
+            self.entry = None
+            self.accepting = True
 
     def endElement(self, name):
         element = self.stack.pop(-1)
         assert element['name'] == name
-        if not self.key:
+        if not self.accepting:
             return
-            content = '~'
         content = re.sub(r'\s+', ' ', ''.join(element['content']).strip())
         if element['greek'] and self.stack and not self.top['greek']:
+            if not self.key and content:
+                self.key = re.sub(r'[^a-z\s]', '', content)
+                self.entry = re.sub(r'[\p{P}]', '', betacode.convert(content))
             content = '$%s$' % (content and betacode.convert(content))
         if name == 'bibl':
             content = f'&{ content }&'
@@ -65,32 +70,28 @@ class Extractor(sax.handler.ContentHandler):
             content = re.sub(r'[.]\s[.]', r'…', content)
             # indent senses
             content = re.sub(r'\s*{(\w+)}', r'\n\t\1.', content)
-            # clean punctuation to remove biblScope
-            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([.])', r'.\1', content)
-            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß\s*([,;:)])', r'.\1\2', content)
-            # content = re.sub(r'\.\s*([#@]?)\s*ß[^ß]*ß(\s*[(]?)', r'.\1\2', content)
-            # content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
-            # content = re.sub(r'[,;]\s*([#@]?)\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
-            # content = re.sub(r'([#$])\s*ß[^ß]*ß\s*([.,;:)])', r'\1\2', content)
-            # content = re.sub(r'([#$])\s*ß[^ß]*ß(\s*[(])', r'\1\2', content)
-            # content = re.sub(r'ß', r'', content)
             # fix punctuation
             content = re.sub(r'([(])\s*[,.:]\s*', r'\1', content)
             # content = re.sub(r'\s*—\s*', r' ——  ', content)
             content = re.sub(r'\$', r'', content)
-            self.result[self.key] = content
+            match = re.match(r'^%[^%]*%\s+(\(\w\))', content)
+            if match:
+                self.entry = f'{ self.entry } { match.group(1) }'
+            self.results.append({'key': self.key, 'entry': self.entry,
+                                 'content': content})
             self.count += 1
             if self.count % 100 == 0:
                 print_progress_bar('Extracting', self.count,
                                    self.MAXIMUM_ENTRIES)
+            # self.accepting = False
         elif self.stack:
             self.top['content'].append(content)
 
     def dump(self, filename, mode='w'):
         with open(filename, mode) as stream:
-            for key in self.result.keys():
-                print(key, betacode.convert(key), file=stream)
-                print('\t' + self.result[key], file=stream)
+            for result in self.results:
+                print(f'{ result['key'] } | { result['entry'] }', file=stream)
+                print('\t' + result['content'], file=stream)
 
 
 if __name__ == '__main__':
@@ -102,4 +103,5 @@ if __name__ == '__main__':
         extractor.parse(filename, total)
         total = extractor.count
         extractor.dump('output.txt', mode='a' if index else 'w')
-    print('\nOutput written to', 'output.txt')
+    print_progress_bar('Extracting', 1, 1, last=True)
+    print(f'Extracted { total } entries into { "output.txt" }')
