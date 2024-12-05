@@ -5,131 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Liddell-Scott's Greek-English Lexicon</title>
   </head>
-  <body data-lexicon="lexicon.json.gz">
+  <body data-lexicon="assets/lexicon.json.gz">
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="assets/style.css" />
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap');
-      @media (min-width: 992px) {
-        .container {
-          max-width: 960px;
-          font-size: 1.2em;
-        }
-      }
-      body {
-        font-family: "Noto Serif";
-      }
-      h2 {
-        text-align: center;
-        background: #374c4a;
-        color: white;
-        padding: 2rem 0;
-        font-size: 2em;
-        font-weight: bold;
-      }
-      .betacode {
-        display: flex;
-        justify-content: center;
-
-        div {
-          width: 2rem;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-
-          &:nth-of-type(even) {
-            background: #5a7b5e;
-            color: white;
-
-            :last-child {
-              background: #fdedd8;
-              color: black;
-            }
-          }
-
-          &:nth-of-type(odd) {
-            background: #374c4a;
-            color: white;
-
-            :last-child {
-              background: #cfc59f;
-              color: black;
-            }
-          }
-        }
-      }
-      .custom-dropdown {
-        font-size: 1.2em;
-      }
-      .control {
-        display: flex;
-        gap: 0.5rem;
-        align-items: stretch;
-        margin: 1rem 0 2rem 0;
-        font-size: 1.2em;
-      }
-      #input {
-        flex-grow: 1;
-      }
-      button {
-        white-space: nowrap;
-      }
-      #content {
-        .definition {
-          font-weight: bolder;
-          color: #374c4a;
-          font-size: 110%;
-        }
-        .sense {
-          font-style: italic;
-          color: #5a7b5e;
-          font-weight: 600;
-        }
-        .title {
-          font-style: italic;
-        }
-        .biblio {
-          color: #777;
-        }
-        .indent-1 {
-          padding-left: 1rem;
-        }
-        .indent-2 {
-          padding-left: 2rem;
-        }
-        .indent-3 {
-          padding-left: 3rem;
-        }
-        .indent-4 {
-          padding-left: 4rem;
-        }
-        .loading {
-          margin: 20vh 0;
-          text-align: center;
-
-          i {
-            display: block;
-            color: #5a7b5e;
-            margin-bottom: 2rem;
-          }
-        }
-      }
-      .license {
-        font-size: 0.8rem;
-
-        a {
-          color: #555;
-        }
-      }
-    </style>
 
     <div class="container">
       <div class="row">
@@ -164,8 +51,8 @@
           </div>
           <div class="control">
             <select id="input"></select>
-            <button id="backwards" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-left"></i></button>
-            <button id="forwards" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-right"></i></button>
+            <!--button id="backwards" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-left"></i></button-->
+            <!--button id="forwards" class="btn btn-secondary" disabled><i class="fa-solid fa-arrow-right"></i></button-->
           </div>
           <div id="content">
             <p class="loading">
@@ -191,129 +78,6 @@
         </div>
       </div>
     </div>
-
-    <script>
-      var lexicon = null;
-      var results = [];
-
-      const listWords = (word, pageIndex, pageSize) => {
-        if (!lexicon) return {"results": []};
-        if (!word) word = '';
-        let node = lexicon.index;
-        let pos;
-        for (pos = 0; pos < word.length; pos++) {
-          let symbol = word[pos];
-          if (node[2] && symbol in node[2]) node = node[2][symbol];
-          else break;
-        }
-        if (!lexicon.data[node[0]].key.startsWith(word)) return {"results": []};
-        results = [];
-        let start = node[0];
-        let end = node[1];
-        pageSize = pageSize || 5;
-        start += ((pageIndex || 1) - 1) * pageSize;
-        let i;
-        for (i = start; i <= end &&  i - start < pageSize; i++) {
-          results.push({"id": i, "text": lexicon.data[i].word});
-        }
-        let r = {"results": results, "pagination": {"more": i <= end}};
-        return r;
-      };
-
-      const fixIndentation = (indent, start, end, pad) => {
-        if (start >= end) return;
-        let level = 100;
-        for (let i = start; i < end; i++) {
-          level = Math.min(indent[i].level, level);
-          indent[i].space += pad || 0;
-        }
-        let last = start;
-        for (let i = start; i < end; i++) {
-          if (indent[i].level == level) {
-            fixIndentation(indent, last, i, 1);
-            last = i + 1;
-          }
-        }
-        fixIndentation(indent, last, end, 1);
-      }
-
-      const showEntry = (id) => {
-        let $content = $("<div></div>");
-        if (id != null) {
-          let entries = lexicon.data[id].entry;
-          let indent = {};
-          for (let i = 1; i < entries.length; i++) {
-            let prefix = entries[i].substr(0, entries[i].indexOf('.'));
-            let level = 1; // I, II, III, ...
-            if (/^[A-Z]$/.test(prefix) && (prefix != 'I' || i > 1)) level = 0;
-            else if (/^\d+$/.test(prefix)) level = 2;
-            else if (/^[a-z]$/.test(prefix)) level = 3;
-            indent[i] = {'level': level, 'space': 0};
-          }
-          fixIndentation(indent, 1, entries.length);
-          for (let i = 0; i < entries.length; i++) {
-            let $entry = $("<p></p>");
-            if (i > 0 && indent[i].space) $entry.addClass(`indent-${ indent[i].space }`);
-            let formatted = entries[i].replace(/%([^%]*)%/g, "<span class='definition'>$1</span>");
-            formatted = formatted.replace(/@([^@]*)@/g, "<span class='sense'>$1</span>");
-            formatted = formatted.replace(/&([^&]*)&/g, "<span class='biblio'>$1</span>");
-            formatted = formatted.replace(/#([^#]*)#/g, "<span class='title'>$1</span>");
-            $entry.html(formatted);
-            $content.append($entry);
-          }
-        }
-        $("#content").empty();
-        $("#content").append($content);
-      };
-
-      fetch($("body").data("lexicon"))
-      .then(response => response.blob())
-      .then(blob => new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))))
-      .then(response => response.blob())
-      .then(blob => blob.text())
-      .then(text => {
-        lexicon = JSON.parse(text);
-        console.log("Loaded lexicon");
-        $(".loading i").removeClass("fa-spinner fa-spin fa-solid")
-            .addClass("fa-regular fa-circle-check");
-        $(".loading span").text("Lexicon loaded!");
-      });
-
-      $(() => {
-        $.fn.select2.amd.require([
-          'select2/data/array',
-          'select2/utils',
-          'select2/results',
-          'select2/dropdown/infiniteScroll'
-        ], function (ArrayData, Utils, ResultsList, InfiniteScroll) {
-          function CustomData ($element, options) {
-            CustomData.__super__.constructor.call(this, $element, options);
-          }
-          Utils.Extend(CustomData, ArrayData);
-          CustomData.prototype.current = function (callback) {
-            let index = this.$element.val();
-            if (lexicon && index != null) {
-              callback([{"id": index, "text": lexicon.data[index].word}]);
-            } else callback([]);
-          };
-          CustomData.prototype.query = function (params, callback) {
-            callback(listWords(params.term || "", params.page));
-          }
-          let CustomResultsList = ResultsList;
-          CustomResultsList = Utils.Decorate(CustomResultsList, InfiniteScroll);
-
-          $("#input").select2({
-            "placeholder": "Type a word to start searching...",
-            "width": "100%",
-            "theme": "bootstrap-5",
-            "dataAdapter": CustomData,
-            "resultsAdapter": CustomResultsList,
-          });
-          $("#input").on("change", function () {
-            showEntry($(this).val());
-          });
-        });
-      });
-    </script>
+    <script src="assets/script.js"></script>
   </body>
 </html>
