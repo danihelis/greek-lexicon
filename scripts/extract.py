@@ -7,8 +7,11 @@ import sys
 from xml import sax
 
 from betacode import betacode
+from progress import print_progress_bar
+
 
 class Extractor(sax.handler.ContentHandler):
+    MAXIMUM_ENTRIES = 116497  # Only used for display information
 
     def __init__(self):
         self.key = None
@@ -19,7 +22,8 @@ class Extractor(sax.handler.ContentHandler):
     def top(self):
         return self.stack[-1]
 
-    def parse(self, filename):
+    def parse(self, filename, count=0):
+        self.count = count
         sax.parse(filename, self)
         return self.result
 
@@ -75,6 +79,10 @@ class Extractor(sax.handler.ContentHandler):
             # content = re.sub(r'\s*—\s*', r' ——  ', content)
             content = re.sub(r'\$', r'', content)
             self.result[self.key] = content
+            self.count += 1
+            if self.count % 100 == 0:
+                print_progress_bar('Extracting', self.count,
+                                   self.MAXIMUM_ENTRIES)
         elif self.stack:
             self.top['content'].append(content)
 
@@ -91,8 +99,7 @@ if __name__ == '__main__':
     for index in range(27):
         filename = source.format(index + 1)
         extractor = Extractor()
-        print('Processing %s' % filename)
-        data = extractor.parse(filename)
-        total += len(data)
-        print('Extracted %d entries (total of %d)' % (len(data), total))
+        extractor.parse(filename, total)
+        total = extractor.count
         extractor.dump('output.txt', mode='a' if index else 'w')
+    print('\nOutput written to', 'output.txt')

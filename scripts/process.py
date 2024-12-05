@@ -7,6 +7,8 @@ import os
 import re
 import sys
 
+from progress import print_progress_bar
+
 
 class Lexicon:
     mapping = 'abgdevzhqiklmncoprstufxyw'
@@ -18,6 +20,7 @@ class Lexicon:
             self.lexicon = lexicon
             self.root = [0, 0, {}]
             lexicon.entries.sort(key=lambda e: e['order'])
+            total = len(lexicon.entries)
             for index, entry in enumerate(lexicon.entries):
                 previous = lexicon.entries[index - 1] if index else None
                 entry['script'] = 0
@@ -29,6 +32,9 @@ class Lexicon:
                     entry['word'] += self.into_superscript(entry['script'])
             for index, entry in enumerate(lexicon.entries):
                 self.add_key(entry['key'], index)
+                if index % 100 == 0:
+                    print_progress_bar('Indexing', index, total)
+            print_progress_bar('Indexing', total, total, last=True)
             self.prune(self.root)
             for entry in lexicon.entries:
                 del entry['order']
@@ -87,12 +93,17 @@ class Lexicon:
         self.keys = []
         entry = None
         with open(filename) as stream:
-            for line in stream.readlines():
+            lines = stream.readlines()
+            total = len(lines)
+            for index, line in enumerate(lines):
                 if line.startswith('\t'):
                     entry['entry'].append(line[1:-1])
                 else:
                     entry = self.create_entry(line)
-        print('Found %d entries' % len(self.entries))
+                if index % 1000 == 0:
+                    print_progress_bar('Reading', index, total)
+        print_progress_bar('Reading', total, total, last=True)
+        # print('Found %d entries' % len(self.entries))
         # print('Charactes discarted from keys:', self.discarded)
         self.index = self.Index(self)
 
@@ -109,5 +120,5 @@ if __name__ == '__main__':
     print('Processing', filename)
     lexicon = Lexicon(filename)
     output = 'lexicon.json.gz'
-    print('Writing into', output)
+    print('Compressing into', output)
     lexicon.compress(output)
