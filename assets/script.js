@@ -80,7 +80,6 @@ fetch($("body").data("lexicon"))
 .then(blob => blob.text())
 .then(text => {
     lexicon = JSON.parse(text);
-    console.log("Loaded lexicon");
     $(".loading i").removeClass("fa-spinner fa-spin fa-solid")
             .addClass("fa-regular fa-circle-check");
     $(".loading span").text("Lexicon loaded!");
