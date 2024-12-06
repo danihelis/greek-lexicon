@@ -50,7 +50,7 @@ class Extractor(sax.handler.ContentHandler):
         if element['greek'] and self.stack and not self.top['greek']:
             if not self.key and content:
                 self.key = re.sub(r'[^a-z\s]', '', content)
-                self.entry = re.sub(r'[\p{P}]', '', betacode.convert(content))
+                self.entry = re.sub(r'[^\p{L}\s]', '', betacode.convert(content))
             content = '$%s$' % (content and betacode.convert(content))
         if name == 'bibl':
             content = f'&{ content }&'
@@ -67,7 +67,7 @@ class Extractor(sax.handler.ContentHandler):
         if name == 'entryFree':
             # fix source
             content = re.sub(r'<[*]>', r'', content)
-            content = re.sub(r'[.]\s[.]', r'…', content)
+            content = re.sub(r'[.](\s+[.])+', r'…', content)
             # indent senses
             content = re.sub(r'\s*{(\w+)}', r'\n\t\1.', content)
             # fix punctuation

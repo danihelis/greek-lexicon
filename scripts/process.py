@@ -11,13 +11,13 @@ from progress import print_progress_bar
 
 
 class Lexicon:
-    mapping = 'abgdevzhqiklmncoprstufxyw'
+    mapping = ' abgdevzhqiklmncoprstufxyw'
 
     class Index:
         def __init__(self, lexicon):
             self.lexicon = lexicon
             self.root = [0, 0, {}]
-            # lexicon.entries.sort(key=lambda e: e['order'])
+            lexicon.entries.sort(key=lambda e: e['order'])
             total = len(lexicon.entries)
             for index, entry in enumerate(lexicon.entries):
                 self.add_key(entry['key'], index)
