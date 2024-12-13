@@ -47,6 +47,22 @@ const fixIndentation = (indent, start, end, pad) => {
 const showEntry = (id) => {
     let $content = $("<div></div>");
     if (id != null) {
+        let $nav = $("<div class='navigation'></div>");
+        id = parseInt(id);
+        if (id > 0) {
+            $nav.append($(`
+                <a class="link" href="#" data-value="${ id - 1 }">
+                    <i class="fa-solid fa-chevron-left"></i> ${ lexicon.data[id - 1].word }
+                </a>`));
+        }
+        $nav.append($("<span class='span'></span>"));
+        if (id < lexicon.data.length - 1) {
+            $nav.append($(`
+                <a class="link" href="#" data-value="${ id + 1 }">
+                    ${ lexicon.data[id + 1].word } <i class="fa-solid fa-chevron-right"></i>
+                </a>`));
+        }
+        $content.append($nav);
         let entries = lexicon.data[id].entry;
         let indent = {};
         for (let i = 1; i < entries.length; i++) {
@@ -71,6 +87,9 @@ const showEntry = (id) => {
     }
     $("#content").empty();
     $("#content").append($content);
+    $("#content .link").on("click", function () {
+        showEntry($(this).data("value"));
+    });
 };
 
 fetch($("body").data("lexicon"))

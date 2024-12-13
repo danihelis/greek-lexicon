@@ -54,7 +54,7 @@ h2 {
   display: flex;
   gap: 0.5rem;
   align-items: stretch;
-  margin: 1rem 0 2rem 0;
+  margin: 1rem 0 1rem 0;
   font-size: 1.2em;
 }
 #input {
@@ -64,6 +64,25 @@ button {
   white-space: nowrap;
 }
 #content {
+  .navigation {
+    display: flex;
+    margin-bottom: 1rem;
+
+    .span {
+      flex-grow: 1;
+    }
+
+    .link {
+      color: #5a7b5e;
+      font-size: 90%;
+      display: inline-block;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline !important;
+    }
+  }
+
   .definition {
     font-weight: bolder;
     color: #374c4a;
