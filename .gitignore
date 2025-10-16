@@ -1,6 +1,5 @@
 *.pyc
 *.swp
 lexica
-
 *.txt
-*.json
+node_modules
