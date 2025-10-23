@@ -35,8 +35,9 @@ export class Lexicon {
     for (let pos = 0; pos < word.length; pos++) {
         let symbol = word[pos];
         if (node[2] && symbol in node[2]) node = node[2][symbol];
-        else return [0, -1];
+        else break;
     }
+    if (!this.json.data[node[0]].key.startsWith(word)) return [0, -1];
     return [node[0], node[1]];
   };
 
@@ -46,6 +47,6 @@ export class Lexicon {
     for (i = index ?? start; i <= end && page > 0; i++, page--) {
       results.push({index: i, text: this.json.data[i].word});
     }
-    return [results, i <= end];
+    return [results, i <= end, i];
   };
 }

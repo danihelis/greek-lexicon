@@ -1,105 +1,78 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Transition } from '@headlessui/react';
 import { convertToGreek } from './Lexicon.js';
 
 
-function Element({text, className}) {
+function Element({text, className, ref, selected}) {
+  const style = selected ? 'bg-gray-400' : 'hover:bg-gray-300';
 
   return (
-    <div className={`p-1 px-2 hover:bg-gray-300 rounded-md ${className}`}>
+    <div ref={ref} className={`${style} p-1 px-2 rounded-md ${className}`}>
       {text}
     </div>
   );
 }
 
+function List({lexicon, search, current, setCurrent}) {
+  const [results, setResults] = useState([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [lastIndex, setLastIndex] = useState(0);
+  const ref = useRef(null);
+  const focused = useRef(null);
 
-function List({lexicon, search}) {
-  let [results, setResults] = useState([]);
-  let [hasMore, setHasMore] = useState(false);
+  const loadMore = restart => {
+    const [entries, hasMore, nextIndex] = lexicon.filterWords(
+        search, restart ? undefined : lastIndex);
+    setResults([...(restart ? [] : results), ...entries]);
+    setHasMore(hasMore);
+    setLastIndex(nextIndex);
+  };
+
+  const observerCallback = useCallback((entries) => {
+    const target = entries[0];
+    if (entries[0].isIntersecting) loadMore();
+  }, [loadMore]);
 
   useEffect(() => {
-    let [entries, hasMore] = lexicon.filterWords(search);
-    let results = entries.map(e => (
-      <Element key={e.index} value={e.index} text={e.text} />
-    ));
-
-    if (hasMore) results.push(
-      <Element key="more-down" value="more-down" text="Loading..." className="text-gray-400" />
-    );
-    if (!results.length) results.push(
-      <Element key="empty" value="empty" text="No entry found" className="text-gray-500" />
-    );
-
-    setResults(results);
-    setHasMore(hasMore);
+    loadMore(true);
   }, [search]);
 
-    /*
   useEffect(() => {
+    if (!hasMore) return;
 
-  }, [results]);
+    const observer = new IntersectionObserver(observerCallback, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 1.0
+    });
+    if (ref.current) observer.observe(ref.current);
+    return () => {
+      if (ref.current) observer.unobserve(ref.current);
+    };
+  }, [results, observerCallback]);
 
-// State to track how many items are currently visible
-    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
-
-    // Ref for the invisible element at the end of the list
-    const observerTargetRef = useRef(null);
-
-    // Calculate the subset of data to render (Memoized for performance)
-    const visibleItems = useMemo(() => {
-        return ALL_DATA.slice(0, visibleCount);
-    }, [visibleCount]);
-
-    // Check if there are more items to load
-    const hasMore = visibleCount < ALL_DATA.length;
-
-    // --- Intersection Observer Logic ---
-    useEffect(() => {
-        // Only run observer if there are more items to load
-        if (!hasMore) return;
-
-        // 1. Define the callback function
-        const observerCallback = (entries) => {
-            const target = entries[0];
-
-            // If the target is intersecting (visible), load the next batch
-            if (target.isIntersecting) {
-                // Load the next batch by incrementing the visibleCount
-                setVisibleCount(prevCount => prevCount + ITEMS_PER_LOAD);
-            }
-        };
-
-        // 2. Create the observer instance
-        const observer = new IntersectionObserver(observerCallback, {
-            root: null, // null means observing relative to the document viewport
-            rootMargin: '0px',
-            threshold: 1.0 // Trigger when 100% of the target is visible
-        });
-
-        // 3. Start observing the target element
-        const currentTarget = observerTargetRef.current;
-
-        if (currentTarget) {
-            observer.observe(currentTarget);
-        }
-
-        // 4. Cleanup function: Stop observing when the component unmounts
-        // or before the effect runs again (e.g., when hasMore becomes false)
-        return () => {
-            if (currentTarget) {
-                observer.unobserve(currentTarget);
-            }
-        };
-
-    }, [hasMore]);
-
-  */
-
-
+  useEffect(() => {
+    if (current >= lastIndex) {
+      if (hasMore) loadMore();
+      else setCurrent(current % results.length);
+    }
+    if (focused.current) focused.current.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest'
+    });
+  }, [results, current]);
 
   return (
     <div className="flex flex-col bg-gray-200 w-full p-2 items-strech gap-1 shadow-md overflow-y-scroll max-h-80">
-      {results}
+      {results.map((e, i) => (
+        <Element key={e.index} ref={current == i ? focused : null} value={e.index} text={e.text} selected={current == i} />
+      ))}
+      {results.length === 0 ? (
+        <Element key="empty" value="empty" text="No entry found" className="text-gray-500" />
+      ) : null}
+      {hasMore ? (
+        <Element ref={ref} key="more-down" value="more-down" text="Loading..." className="text-gray-400" />
+      ) : null}
     </div>
   );
 }
@@ -108,14 +81,27 @@ function List({lexicon, search}) {
 export function Search({lexicon}) {
   const [showList, setShowList] = useState(false);
   const [search, setSearch] = useState('');
+  const [current, setCurrent] = useState(null);
 
   const handleFocus = (focus) => {
+    setCurrent(null);
     setShowList(focus);
   };
 
   const handleChange = (e) => {
+    setCurrent(null);
     setSearch(convertToGreek(e.target.value));
   }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'ArrowUp' && current > 0) {
+      event.preventDefault();
+      setCurrent(current - 1);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setCurrent(current === null ? 0 : current + 1);
+    }
+  };
 
   return (
     <div className="m-2 mt-4 relative font-serif">
@@ -126,10 +112,11 @@ export function Search({lexicon}) {
         onChange={handleChange}
         onFocus={() => handleFocus(true)}
         onBlur={() => handleFocus(false)}
+        onKeyDown={handleKeyDown}
       />
       <Transition show={showList}>
         <div className="absolute w-full transition duration-200 ease-in data-closed:opacity-0">
-          <List lexicon={lexicon} search={search} />
+          <List lexicon={lexicon} search={search} current={current} setCurrent={setCurrent} />
         </div>
       </Transition>
     </div>
