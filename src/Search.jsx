@@ -3,27 +3,29 @@ import { Transition } from '@headlessui/react';
 import { convertToGreek } from './Lexicon.js';
 
 
-function Element({text, className, ref, selected}) {
-  const style = selected ? 'bg-gray-400' : 'hover:bg-gray-300';
+function Element({text, className, ref, selected, onClick}) {
+  const style = selected ? 'bg-gray-600 text-white' : 'hover:bg-gray-300';
 
   return (
-    <div ref={ref} className={`${style} p-1 px-2 rounded-md ${className}`}>
+    <div ref={ref} className={`${style} p-1 px-2 rounded-md cursor-pointer ${className}`} onClick={onClick} >
       {text}
     </div>
   );
 }
 
-function List({lexicon, search, current, setCurrent}) {
+function List({lexicon, search, current, onList, onSelect}) {
   const [results, setResults] = useState([]);
   const [hasMore, setHasMore] = useState(false);
   const [lastIndex, setLastIndex] = useState(0);
   const ref = useRef(null);
   const focused = useRef(null);
 
-  const loadMore = restart => {
+  const loadMore = (restart) => {
     const [entries, hasMore, nextIndex] = lexicon.filterWords(
         search, restart ? undefined : lastIndex);
-    setResults([...(restart ? [] : results), ...entries]);
+    const newResults = [...(restart ? [] : results), ...entries];
+    onList(hasMore ? undefined : newResults.length, newResults[0]?.index);
+    setResults(newResults);
     setHasMore(hasMore);
     setLastIndex(nextIndex);
   };
@@ -52,20 +54,30 @@ function List({lexicon, search, current, setCurrent}) {
   }, [results, observerCallback]);
 
   useEffect(() => {
-    if (current >= lastIndex) {
-      if (hasMore) loadMore();
-      else setCurrent(current % results.length);
+    if (hasMore && current >= results.length) {
+      loadMore();
     }
-    if (focused.current) focused.current.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest'
-    });
-  }, [results, current]);
+    setTimeout(() => {
+      if (focused.current) {
+        focused.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    }, 10);
+  }, [current]);
 
   return (
     <div className="flex flex-col bg-gray-200 w-full p-2 items-strech gap-1 shadow-md overflow-y-scroll max-h-80">
       {results.map((e, i) => (
-        <Element key={e.index} ref={current == i ? focused : null} value={e.index} text={e.text} selected={current == i} />
+        <Element
+          key={e.index}
+          ref={current == i ? focused : null}
+          value={e.index}
+          text={e.text}
+          selected={current == i}
+          onClick={() => onSelect(e.index, i)}
+        />
       ))}
       {results.length === 0 ? (
         <Element key="empty" value="empty" text="No entry found" className="text-gray-500" />
@@ -78,36 +90,80 @@ function List({lexicon, search, current, setCurrent}) {
 }
 
 
-export function Search({lexicon}) {
+export function Search({lexicon, onSelect}) {
   const [showList, setShowList] = useState(false);
   const [search, setSearch] = useState('');
-  const [current, setCurrent] = useState(null);
+  const [current, setCurrent] = useState();
+  const [size, setSize] = useState();
+  const [head, setHead] = useState();
+  const [last, setLast] = useState();
+
+  const ref = useRef(null);
+
+  const resetList = () => {
+    setCurrent(null);
+    setLast(null);
+    setShowList(true);
+  };
 
   const handleFocus = (focus) => {
-    setCurrent(null);
+    setCurrent(last);
     setShowList(focus);
   };
 
   const handleChange = (e) => {
-    setCurrent(null);
+    resetList();
     setSearch(convertToGreek(e.target.value));
   }
 
   const handleKeyDown = (event) => {
-    if (event.key === 'ArrowUp' && current > 0) {
+    if (!showList) {
+      setShowList(true);
+      return;
+    }
+    if (event.key === 'ArrowUp' && current && current > 0) {
       event.preventDefault();
-      setCurrent(current - 1);
+      updateCurrent(current - 1);
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setCurrent(current === null ? 0 : current + 1);
+      updateCurrent((current ?? -1) + 1);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setShowList(false);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      if (head !== null && head !== undefined) {
+        setShowList(false);
+        onSelect(head + (current ?? 0));
+        // ref.current.blur();
+      }
     }
   };
 
+  const updateCurrent = (value, mod) => {
+    setLast(null);
+    if (value !== undefined && value !== null) {
+      setCurrent(Math.min(value, (mod ?? size ?? Infinity) - 1));
+    }
+  }
+
+  const handleList = (size, head) => {
+    setSize(size);
+    setHead(head);
+    updateCurrent(current, size);
+  };
+
+  const handleSelect = (entryId, index) => {
+    setLast(index);
+    onSelect(entryId);
+  };
+
   return (
-    <div className="m-2 mt-4 relative font-serif">
+    <div className="mx-2 relative">
       <input
+        ref={ref}
         className="w-full bg-gray-100 inset-shadow-sm xxxinset-shadow-gray-800 p-2 rounded-md text-lg"
-        placeholder="Type a letter to start searching..."
+        placeholder="Type to start searching..."
         value={search}
         onChange={handleChange}
         onFocus={() => handleFocus(true)}
@@ -116,7 +172,7 @@ export function Search({lexicon}) {
       />
       <Transition show={showList}>
         <div className="absolute w-full transition duration-200 ease-in data-closed:opacity-0">
-          <List lexicon={lexicon} search={search} current={current} setCurrent={setCurrent} />
+          <List lexicon={lexicon} search={search} current={current} onList={handleList} onSelect={handleSelect} />
         </div>
       </Transition>
     </div>

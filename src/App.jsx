@@ -3,6 +3,8 @@ import { ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { Header } from './Header.jsx';
 import { Board } from './Board.jsx';
 import { Search } from './Search.jsx';
+import { Content } from './Content.jsx';
+import { Footer } from './Footer.jsx';
 import { Lexicon } from './Lexicon.js';
 
 
@@ -45,6 +47,7 @@ export function ErrorMessage() {
 export default function App() {
   const [lexicon, setLexion] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [entryId, setEntryId] = useState();
 
   useEffect(() => {
     let isMounted = true;
@@ -67,15 +70,18 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex justify-center">
-      <div className="flex-1 max-w-sm">
+    <div className="flex justify-center font-noto h-dvh">
+      <div className="flex-1 flex flex-col max-w-sm gap-4">
         <Header />
         {isLoading ? <LoadMessage /> : !lexicon ? <ErrorMessage /> : (
           <>
             <Board />
-            <Search lexicon={lexicon} />
+            <Search lexicon={lexicon} onSelect={setEntryId} />
+            {entryId ? <Content entryId={entryId} lexicon={lexicon} /> :
+              <span className="flex-grow" />}
           </>
         )}
+        <Footer />
       </div>
     </div>
   )

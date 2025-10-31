@@ -15,7 +15,7 @@ export function Board() {
       elements.push(
         <div
           key={symbol}
-          className={`${bg} ${color} font-serif text-center`}
+          className={`${bg} ${color} text-center`}
         >
           {symbol}
         </div>
@@ -25,7 +25,7 @@ export function Board() {
   }
 
   return (
-    <div className="m-2 grid grid-cols-26">
+    <div className="px-2 grid grid-cols-26">
       {elements}
     </div>
   )

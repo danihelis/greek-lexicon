@@ -69,7 +69,7 @@ def patch(input_filename, output_filename):
                                 'dat', 'lon', 'uncontr', 'Inscrr',
                                 'opp', 'fort', 'imper', 'impf', 'orig',
                                 'Arg', 'Gr', 'Cf', 'prob', 'Gramm',
-                                'fin', 'dub', 'Cypr', 'i.e']
+                                'fin', 'dub', 'Cypr', 'i.e', 'shortd']
                         excluded = (
                                 not any(exp in previous
                                         for exp in must_include)
