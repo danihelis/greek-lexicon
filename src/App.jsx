@@ -70,20 +70,36 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadData = async () => {
+
+    const loadData = async (name) => {
       try {
         setIsLoading(true);
-        const module = await import('./assets/lexicon.json');
-        const fileData = module.default;
-        if (isMounted) setLexion(new Lexicon(fileData));
+        const module = await import(`./assets/lexicon.${name}.json`);
+        return module.default;
       } catch (e) {
-        console.error("Could not load the file chunk:", e);
+        console.error(`Could not load the file chunk "${name}":`, e);
+      }
+    };
+
+    const loadAll = async () => {
+      const chunks = ['index'];
+      for (let i = 0; i < 20; i++) {
+        chunks.push('data-' + String(i).padStart(2, '0'));
+      }
+
+      const promises = chunks.map(c => loadData(c));
+      try {
+        const chunksData = await Promise.all(promises);
+        const lexicon = new Lexicon(chunksData);
+        if (isMounted) setLexion(lexicon);
+      } catch (e) {
+        console.error(`Error while loading data:`, e);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
 
-    loadData();
+    loadAll();
     return () => {isMounted = false};
   }, []);
 

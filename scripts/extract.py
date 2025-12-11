@@ -95,7 +95,7 @@ class Extractor(sax.handler.ContentHandler):
 
 
 if __name__ == '__main__':
-    source = 'lexica/CTS_XML_TEI/perseus/pdllex/grc/lsj/grc.lsj.perseus-eng{}.xml'
+    source = '../lexica/CTS_XML_TEI/perseus/pdllex/grc/lsj/grc.lsj.perseus-eng{}.xml'
     total = 0
     for index in range(27):
         filename = source.format(index + 1)

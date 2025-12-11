@@ -27,19 +27,20 @@ export function convertFromGreek(text) {
 
 export class Lexicon {
 
-  constructor(json) {
-    this.json = json;
+  constructor(chunks) {
+    this.index = chunks[0];
+    this.data = chunks.slice(1).flat();
   }
 
   getInterval = (word) => {
     word = convertFromGreek(word ?? '');
-    let node = this.json.index;
+    let node = this.index;
     for (let pos = 0; pos < word.length; pos++) {
         let symbol = word[pos];
         if (node[2] && symbol in node[2]) node = node[2][symbol];
         else break;
     }
-    if (!this.json.data[node[0]].key.startsWith(word)) return [0, -1];
+    if (!this.data[node[0]].key.startsWith(word)) return [0, -1];
     return [node[0], node[1]];
   };
 
@@ -47,15 +48,15 @@ export class Lexicon {
     let [start, end] = this.getInterval(filter);
     let i, results = [];
     for (i = index ?? start; i <= end && page > 0; i++, page--) {
-      results.push({index: i, text: this.json.data[i].word});
+      results.push({index: i, text: this.data[i].word});
     }
     return [results, i <= end, i];
   };
 
   getEntry(id) {
     const entry = {
-      'word': this.json.data[id].word,
-      'lines': this.json.data[id].entry,
+      'word': this.data[id].word,
+      'lines': this.data[id].entry,
     };
 
     entry.indent = {};

@@ -92,11 +92,22 @@ class Lexicon:
         with gzip.open(filename, 'wb') as stream:
             stream.write(str.encode(self.into_json()))
 
+    def write(self, parts=20):
+        with open('lexicon.index.json', 'w') as stream:
+            stream.write(json.dumps(self.index.root))
+
+        size = len(self.entries)
+        for i in range(parts):
+            block = self.entries[int(i / parts * size) :
+                                 int((i + 1) / parts * size)]
+            with open('lexicon.data-%02d.json' % i, 'w') as stream:
+                stream.write(json.dumps(block))
+
 
 if __name__ == '__main__':
-    filename = 'output.txt'
+    filename = 'patched.txt'
     print('Processing', filename)
     lexicon = Lexicon(filename)
-    output = 'lexicon.json.gz'
-    print('Compressing into', output)
-    lexicon.compress(output)
+
+    print('Writing output data in lexicon.*.json...')
+    lexicon.write()
