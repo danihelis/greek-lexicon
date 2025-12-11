@@ -31,7 +31,7 @@ export function Footer() {
   );
 
   return (
-    <div className="bg-gray-200 text-gray-800 p-2 text-xs text-center">
+    <div className="text-gray-600 p-2 text-xs text-center">
       {short}
     </div>
   );

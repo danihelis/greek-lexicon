@@ -50,6 +50,24 @@ export default function App() {
   const [entryId, setEntryId] = useState();
 
   useEffect(() => {
+    const handlePopState = (event) => {
+      const query = new URLSearchParams(window.location.search).get('q');
+      if (query) handlePage(query);
+    };
+    window.addEventListener('popstate', handlePopState);
+    handlePopState();
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handlePage = (entryId, pushState) => {
+    if (entryId && pushState) {
+      let url = `?q=${entryId}`;
+      window.history.pushState({}, '', url);
+    }
+    if (entryId) setEntryId(entryId);
+  };
+
+  useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
@@ -71,17 +89,16 @@ export default function App() {
 
   return (
     <div className="flex justify-center font-noto h-dvh">
-      <div className="flex-1 flex flex-col max-w-sm gap-4">
+      <div className="flex-1 flex flex-col max-w-2xl gap-4">
         <Header />
         {isLoading ? <LoadMessage /> : !lexicon ? <ErrorMessage /> : (
           <>
             <Board />
-            <Search lexicon={lexicon} onSelect={setEntryId} />
+            <Search lexicon={lexicon} onSelect={(id) => handlePage(id, true)} />
             {entryId ? <Content entryId={entryId} lexicon={lexicon} /> :
               <span className="flex-grow" />}
           </>
         )}
-        <Footer />
       </div>
     </div>
   )

@@ -2,4 +2,5 @@
 *.swp
 lexica
 *.txt
-node_modules
+node_modules/
+dist/

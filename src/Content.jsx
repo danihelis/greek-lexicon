@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Footer } from './Footer.jsx';
 
 
-const indentStyle = ['', 'pl-2', 'pl-4', 'pl-6', 'pl-8'];
+const indentStyle = ['', 'pl-2 sm:pl-4', 'pl-4 sm:pl-8', 'pl-6 sm:pl-12', 'pl-8 sm:pl-16'];
 const boundaries = ['%', '@', '&', '#'];
 const boundaryStyle = {
   '%': 'font-bold text-lg', // definition
@@ -73,8 +74,11 @@ export function Content({lexicon, entryId}) {
   }
 
   return (
-    <div className="px-2 text-md flex flex-col gap-2 text-gray-800 overflow-y-auto h-full">
-      {content}
+    <div className="min-w-0 flex flex-col overflow-y-auto h-full justify-between gap-6">
+      <div className="px-2 text-md flex flex-col gap-2 text-gray-800">
+        {content}
+      </div>
+      <Footer />
     </div>
   )
 }
